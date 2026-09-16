@@ -1,0 +1,353 @@
+.page {
+  position: relative;
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: linear-gradient(180deg, #fffdf7 0%, #fdfaf0 100%);
+  padding: 14mm 16mm 16mm 16mm;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #1e293b;
+}
+
+.outerBorder {
+  position: fixed;
+  inset: 6mm;
+  border: 3px solid #e07b1a;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.innerBorder {
+  position: fixed;
+  inset: 7.5mm;
+  border: 1px solid #c9a227;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.cornerSwooshTop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 60mm;
+  height: 22mm;
+  background: linear-gradient(115deg, #ff9933 0%, #ff9933 45%, #ffffff 50%, #128a3e 55%, #128a3e 100%);
+  clip-path: polygon(35% 0, 100% 0, 100% 100%);
+  opacity: 0.95;
+  z-index: 0;
+}
+
+.cornerSwooshBottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 60mm;
+  height: 22mm;
+  background: linear-gradient(295deg, #128a3e 0%, #128a3e 45%, #ffffff 50%, #ff9933 55%, #ff9933 100%);
+  clip-path: polygon(0 0, 65% 100%, 0 100%);
+  opacity: 0.95;
+  z-index: 0;
+}
+
+.sideStripLeft,
+.sideStripRight {
+  position: fixed;
+  top: 6mm;
+  bottom: 6mm;
+  width: 4mm;
+  background: repeating-linear-gradient(
+    to bottom,
+    #ff9933 0,
+    #ff9933 8mm,
+    #ffffff 8mm,
+    #ffffff 9.5mm,
+    #128a3e 9.5mm,
+    #128a3e 17.5mm,
+    #ffffff 17.5mm,
+    #ffffff 19mm
+  );
+  z-index: 0;
+}
+.sideStripLeft {
+  left: 6mm;
+}
+.sideStripRight {
+  right: 6mm;
+}
+
+.watermark {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 130mm;
+  height: 130mm;
+  transform: translate(-50%, -50%);
+  opacity: 0.05;
+  z-index: 0;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  margin: 0 8mm;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.logoCircle {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: conic-gradient(from 90deg, #ff9933 0 33%, #ffffff 33% 66%, #128a3e 66% 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 11px;
+  color: #1e293b;
+  border: 1.5px solid #c9a227;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.headerCenter {
+  text-align: center;
+}
+
+.clubBadge {
+  display: inline-block;
+  background: #0f2a52;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 4px 16px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 6px 0 2px;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #b91c1c;
+  text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;
+}
+
+.subtitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.ribbon {
+  margin: 10px auto 4px;
+  display: inline-block;
+  background: linear-gradient(180deg, #e9c458, #c9922b);
+  color: #26150a;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 5px 22px;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.ribbonWrap {
+  text-align: center;
+}
+
+.sectionBadge {
+  display: inline-block;
+  color: #fff;
+  font-weight: 800;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  padding: 5px 18px;
+  border-radius: 999px;
+  margin: 18px 0 8px;
+  text-transform: uppercase;
+}
+.badgeIncome { background: #0f2a52; }
+.badgeExpenseT { background: #c2410c; }
+.badgeExpenseC { background: #1d4ed8; }
+.badgeBalance { background: #6d28d9; }
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.summaryBox {
+  border: 1px solid #e2c98a;
+  background: #fffaf0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  text-align: center;
+}
+.summaryBoxLabel {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  color: #92400e;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.summaryBoxValue {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-top: 2px;
+}
+
+table.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5px;
+  margin-bottom: 10px;
+}
+table.dataTable thead th {
+  background: #0f2a52;
+  color: #fff;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 5px 6px;
+  text-align: left;
+  border: 1px solid #0f2a52;
+}
+table.dataTable.expTournament thead th { background: #c2410c; border-color: #c2410c; }
+table.dataTable.expClub thead th { background: #1d4ed8; border-color: #1d4ed8; }
+
+table.dataTable td {
+  padding: 4px 6px;
+  border: 1px solid #e6d9b8;
+  color: #1e293b;
+}
+table.dataTable tbody tr:nth-child(even) {
+  background: #fbf6e9;
+}
+table.dataTable tfoot td {
+  font-weight: 800;
+  background: #f3e6bf;
+  border-top: 2px solid #c9922b;
+}
+.amountCell {
+  text-align: right;
+  white-space: nowrap;
+}
+.dataTable tr {
+  break-inside: avoid;
+}
+
+.balanceTable {
+  width: 60%;
+  margin: 6px 0 14px;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+.balanceTable td {
+  padding: 5px 10px;
+  border: 1px solid #e6d9b8;
+}
+.balanceTable .label { color: #475569; }
+.balanceTable .value { text-align: right; font-weight: 700; }
+.balanceTable .grand {
+  background: #0f2a52;
+  color: #fff;
+  font-size: 13px;
+}
+
+.accountGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 8px 0 14px;
+}
+.accountCard {
+  border: 1px solid #e2c98a;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: #fffaf0;
+}
+.accountCardTitle {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #92400e;
+  margin-bottom: 4px;
+}
+.accountCardRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  padding: 1.5px 0;
+  color: #334155;
+}
+.accountCardRow.total {
+  border-top: 1px solid #c9922b;
+  margin-top: 2px;
+  padding-top: 3px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.grandTotalBar {
+  background: linear-gradient(90deg, #ff9933, #ffffff 50%, #128a3e);
+  border-radius: 6px;
+  padding: 2px;
+  margin: 6px 0 16px;
+}
+.grandTotalInner {
+  background: #0f2a52;
+  color: #fff;
+  border-radius: 4px;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 800;
+}
+.grandTotalInner .amt { font-size: 18px; }
+
+.signatureRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 40px;
+}
+.signatureBox {
+  text-align: center;
+  font-size: 11px;
+  color: #334155;
+}
+.signatureLine {
+  border-top: 1px solid #64748b;
+  margin-bottom: 4px;
+  padding-top: 30px;
+}
+.signatureRole {
+  font-weight: 700;
+}
+
+.emptyNote {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 10.5px;
+  padding: 10px;
+}
+
+@media print {
+  .page {
+    box-shadow: none;
+    margin: 0;
+  }
+}
