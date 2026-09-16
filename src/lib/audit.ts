@@ -1,14 +1,18 @@
-import { getDb } from "./db";
+import { getSupabase } from "./supabase";
 
-export function recordAudit(
+export async function recordAudit(
   entityType: "income" | "expense",
   entityId: number,
   action: "create" | "update" | "delete",
   snapshot: unknown
 ) {
-  const db = getDb();
-  db.prepare(
-    `INSERT INTO audit_log (entity_type, entity_id, action, snapshot, changed_at)
-     VALUES (?, ?, ?, ?, ?)`
-  ).run(entityType, entityId, action, JSON.stringify(snapshot), new Date().toISOString());
+  const supabase = getSupabase();
+  const { error } = await supabase.from("audit_log").insert({
+    entity_type: entityType,
+    entity_id: entityId,
+    action,
+    snapshot: JSON.stringify(snapshot),
+    changed_at: new Date().toISOString(),
+  });
+  if (error) throw error;
 }

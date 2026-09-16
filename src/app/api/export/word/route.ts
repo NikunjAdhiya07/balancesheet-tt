@@ -6,9 +6,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const year = Number(searchParams.get("year")) || new Date().getFullYear();
 
-  const summary = computeYearSummary(year);
-  const income = listIncome(year);
-  const expense = listExpense(year);
+  const summary = await computeYearSummary(year);
+  const income = await listIncome(year);
+  const expense = await listExpense(year);
 
   const buffer = await buildBalanceSheetDocx(year, summary, income, expense);
 

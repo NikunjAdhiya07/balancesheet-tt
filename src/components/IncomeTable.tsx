@@ -172,7 +172,7 @@ export default function IncomeTable({
                 label="Attachment"
                 value={
                   <a
-                    href={`/api/attachments/${viewing.attachment_path}`}
+                    href={viewing.attachment_path ?? undefined}
                     target="_blank"
                     className="text-blue-600 hover:underline"
                   >

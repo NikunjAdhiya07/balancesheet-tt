@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getSupabase } from "@/lib/supabase";
 import { getYearRow } from "@/lib/calculations";
 
 export async function GET(
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const { year: yearStr } = await params;
   const year = Number(yearStr);
-  const row = getYearRow(year);
+  const row = await getYearRow(year);
   return NextResponse.json(row);
 }
 
@@ -27,13 +27,21 @@ export async function PUT(
     return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
   }
 
-  const db = getDb();
-  getYearRow(year); // ensure row exists
+  await getYearRow(year); // ensure row exists
+
+  const supabase = getSupabase();
   const now = new Date().toISOString();
-  db.prepare(
-    `UPDATE years SET opening_cash = ?, opening_main_account = ?, opening_secretary_account = ?, updated_at = ?
-     WHERE year = ?`
-  ).run(openingCash, openingMain, openingSecretary, now, year);
+  const { error } = await supabase
+    .from("years")
+    .update({
+      opening_cash: openingCash,
+      opening_main_account: openingMain,
+      opening_secretary_account: openingSecretary,
+      updated_at: now,
+    })
+    .eq("year", year);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }

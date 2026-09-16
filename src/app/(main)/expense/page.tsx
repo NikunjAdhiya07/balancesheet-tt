@@ -10,7 +10,7 @@ export default async function ExpensePage({
   const sp = await searchParams;
   const year = Number(sp.year) || new Date().getFullYear();
 
-  const rows = listExpenseFiltered({
+  const rows = await listExpenseFiltered({
     year,
     category: sp.category,
     from: sp.from,

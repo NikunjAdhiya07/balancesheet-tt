@@ -1,53 +1,72 @@
-import { getDb } from "./db";
+import { getSupabase } from "./supabase";
 import { ExpenseRecord, IncomeRecord, YearSummary } from "./types";
 
 function sum(rows: { amount: number }[]): number {
   return rows.reduce((acc, r) => acc + r.amount, 0);
 }
 
-export function getYearRow(year: number) {
-  const db = getDb();
-  const row = db
-    .prepare(`SELECT * FROM years WHERE year = ?`)
-    .get(year) as
-    | {
-        year: number;
-        opening_cash: number;
-        opening_main_account: number;
-        opening_secretary_account: number;
-      }
-    | undefined;
-  if (row) return row;
+export async function getYearRow(year: number) {
+  const supabase = getSupabase();
+  const { data: existing, error } = await supabase
+    .from("years")
+    .select("*")
+    .eq("year", year)
+    .maybeSingle();
+  if (error) throw error;
+  if (existing) return existing as {
+    year: number;
+    opening_cash: number;
+    opening_main_account: number;
+    opening_secretary_account: number;
+  };
+
   const now = new Date().toISOString();
-  db.prepare(
-    `INSERT INTO years (year, opening_cash, opening_main_account, opening_secretary_account, created_at, updated_at)
-     VALUES (?, 0, 0, 0, ?, ?)`
-  ).run(year, now, now);
+  const { error: insertError } = await supabase.from("years").upsert(
+    {
+      year,
+      opening_cash: 0,
+      opening_main_account: 0,
+      opening_secretary_account: 0,
+      created_at: now,
+      updated_at: now,
+    },
+    { onConflict: "year", ignoreDuplicates: true }
+  );
+  if (insertError) throw insertError;
+
   return { year, opening_cash: 0, opening_main_account: 0, opening_secretary_account: 0 };
 }
 
-export function listIncome(year: number): IncomeRecord[] {
-  const db = getDb();
-  return db
-    .prepare(
-      `SELECT * FROM income WHERE year = ? AND deleted_at IS NULL ORDER BY date ASC, id ASC`
-    )
-    .all(year) as IncomeRecord[];
+export async function listIncome(year: number): Promise<IncomeRecord[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("income")
+    .select("*")
+    .eq("year", year)
+    .is("deleted_at", null)
+    .order("date", { ascending: true })
+    .order("id", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as IncomeRecord[];
 }
 
-export function listExpense(year: number): ExpenseRecord[] {
-  const db = getDb();
-  return db
-    .prepare(
-      `SELECT * FROM expense WHERE year = ? AND deleted_at IS NULL ORDER BY date ASC, id ASC`
-    )
-    .all(year) as ExpenseRecord[];
+export async function listExpense(year: number): Promise<ExpenseRecord[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("expense")
+    .select("*")
+    .eq("year", year)
+    .is("deleted_at", null)
+    .order("date", { ascending: true })
+    .order("id", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as ExpenseRecord[];
 }
 
-export function computeYearSummary(year: number): YearSummary {
-  const yearRow = getYearRow(year);
-  const income = listIncome(year);
-  const expense = listExpense(year);
+export async function computeYearSummary(year: number): Promise<YearSummary> {
+  const yearRow = await getYearRow(year);
+  const income = await listIncome(year);
+  const expense = await listExpense(year);
 
   const cashIncome = sum(income.filter((r) => r.payment_mode === "cash"));
   const mainIncome = sum(
@@ -102,21 +121,21 @@ export function computeYearSummary(year: number): YearSummary {
   };
 }
 
-export function listYears(): number[] {
-  const db = getDb();
-  const fromYears = db
-    .prepare(`SELECT year FROM years ORDER BY year ASC`)
-    .all() as { year: number }[];
-  const fromIncome = db
-    .prepare(`SELECT DISTINCT year FROM income`)
-    .all() as { year: number }[];
-  const fromExpense = db
-    .prepare(`SELECT DISTINCT year FROM expense`)
-    .all() as { year: number }[];
+export async function listYears(): Promise<number[]> {
+  const supabase = getSupabase();
+  const [yearsRes, incomeRes, expenseRes] = await Promise.all([
+    supabase.from("years").select("year"),
+    supabase.from("income").select("year"),
+    supabase.from("expense").select("year"),
+  ]);
+  if (yearsRes.error) throw yearsRes.error;
+  if (incomeRes.error) throw incomeRes.error;
+  if (expenseRes.error) throw expenseRes.error;
+
   const set = new Set<number>([
-    ...fromYears.map((r) => r.year),
-    ...fromIncome.map((r) => r.year),
-    ...fromExpense.map((r) => r.year),
+    ...(yearsRes.data ?? []).map((r) => r.year as number),
+    ...(incomeRes.data ?? []).map((r) => r.year as number),
+    ...(expenseRes.data ?? []).map((r) => r.year as number),
   ]);
   if (set.size === 0) {
     set.add(new Date().getFullYear());

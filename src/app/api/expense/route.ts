@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getSupabase } from "@/lib/supabase";
 import { recordAudit } from "@/lib/audit";
 import { saveAttachment } from "@/lib/attachments";
 import { listExpenseFiltered } from "@/lib/queries";
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   if (!year) {
     return NextResponse.json({ error: "year is required" }, { status: 400 });
   }
-  const rows = listExpenseFiltered({
+  const rows = await listExpenseFiltered({
     year,
     category: searchParams.get("category") || undefined,
     from: searchParams.get("from") || undefined,
@@ -61,33 +61,33 @@ export async function POST(req: NextRequest) {
     attachmentPath = saved.storedPath;
   }
 
-  const db = getDb();
+  const supabase = getSupabase();
   const now = new Date().toISOString();
-  const result = db
-    .prepare(
-      `INSERT INTO expense (year, date, category, details, amount, payment_mode, bank_account, transaction_type, transaction_reference, remarks, attachment_name, attachment_path, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .run(
+  const { data: row, error } = await supabase
+    .from("expense")
+    .insert({
       year,
       date,
       category,
       details,
       amount,
-      paymentMode,
-      paymentMode === "bank" ? bankAccount : null,
-      paymentMode === "bank" ? transactionType : null,
-      paymentMode === "bank" ? transactionReference : null,
+      payment_mode: paymentMode,
+      bank_account: paymentMode === "bank" ? bankAccount : null,
+      transaction_type: paymentMode === "bank" ? transactionType : null,
+      transaction_reference: paymentMode === "bank" ? transactionReference : null,
       remarks,
-      attachmentName,
-      attachmentPath,
-      now,
-      now
-    );
+      attachment_name: attachmentName,
+      attachment_path: attachmentPath,
+      created_at: now,
+      updated_at: now,
+    })
+    .select()
+    .single();
 
-  const id = result.lastInsertRowid as number;
-  const row = db.prepare(`SELECT * FROM expense WHERE id = ?`).get(id);
-  recordAudit("expense", id, "create", row);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const id = row.id as number;
+  await recordAudit("expense", id, "create", row);
 
   return NextResponse.json({ id }, { status: 201 });
 }

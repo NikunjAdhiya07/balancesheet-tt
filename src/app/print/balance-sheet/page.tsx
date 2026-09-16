@@ -10,9 +10,9 @@ export default async function BalanceSheetPrintPage({
   const sp = await searchParams;
   const year = Number(sp.year) || new Date().getFullYear();
 
-  const summary = computeYearSummary(year);
-  const income = listIncome(year);
-  const expense = listExpense(year);
+  const summary = await computeYearSummary(year);
+  const income = await listIncome(year);
+  const expense = await listExpense(year);
 
   return (
     <>

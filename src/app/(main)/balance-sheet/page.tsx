@@ -10,7 +10,7 @@ export default async function BalanceSheetPage({
 }) {
   const sp = await searchParams;
   const year = Number(sp.year) || new Date().getFullYear();
-  const s = computeYearSummary(year);
+  const s = await computeYearSummary(year);
 
   return (
     <div>

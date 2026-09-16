@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getSupabase } from "@/lib/supabase";
 import { listYears } from "@/lib/calculations";
 
 export async function GET() {
-  const years = listYears();
+  const years = await listYears();
   return NextResponse.json({ years });
 }
 
@@ -13,11 +13,19 @@ export async function POST(req: NextRequest) {
   if (!Number.isInteger(year) || year < 2000 || year > 2200) {
     return NextResponse.json({ error: "Invalid year" }, { status: 400 });
   }
-  const db = getDb();
+  const supabase = getSupabase();
   const now = new Date().toISOString();
-  db.prepare(
-    `INSERT OR IGNORE INTO years (year, opening_cash, opening_main_account, opening_secretary_account, created_at, updated_at)
-     VALUES (?, 0, 0, 0, ?, ?)`
-  ).run(year, now, now);
+  const { error } = await supabase.from("years").upsert(
+    {
+      year,
+      opening_cash: 0,
+      opening_main_account: 0,
+      opening_secretary_account: 0,
+      created_at: now,
+      updated_at: now,
+    },
+    { onConflict: "year", ignoreDuplicates: true }
+  );
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ year });
 }

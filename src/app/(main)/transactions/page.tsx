@@ -29,7 +29,7 @@ export default async function TransactionsPage({
   const income =
     type === "expense"
       ? []
-      : listIncomeFiltered({ year, from, to, search }).map(
+      : (await listIncomeFiltered({ year, from, to, search })).map(
           (r): Row => ({
             id: r.id,
             type: "income",
@@ -44,7 +44,7 @@ export default async function TransactionsPage({
   const expense =
     type === "income"
       ? []
-      : listExpenseFiltered({ year, from, to, search }).map(
+      : (await listExpenseFiltered({ year, from, to, search })).map(
           (r): Row => ({
             id: r.id,
             type: "expense",

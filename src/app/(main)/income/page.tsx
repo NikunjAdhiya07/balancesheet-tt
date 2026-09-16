@@ -10,7 +10,7 @@ export default async function IncomePage({
   const sp = await searchParams;
   const year = Number(sp.year) || new Date().getFullYear();
 
-  const rows = listIncomeFiltered({
+  const rows = await listIncomeFiltered({
     year,
     from: sp.from,
     to: sp.to,

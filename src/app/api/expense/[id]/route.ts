@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getSupabase } from "@/lib/supabase";
 import { recordAudit } from "@/lib/audit";
 import { deleteAttachment, saveAttachment } from "@/lib/attachments";
 import { getExpenseById } from "@/lib/queries";
@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const row = getExpenseById(Number(id));
+  const row = await getExpenseById(Number(id));
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(row);
 }
@@ -20,7 +20,7 @@ export async function PUT(
 ) {
   const { id: idStr } = await params;
   const id = Number(idStr);
-  const existing = getExpenseById(id);
+  const existing = await getExpenseById(id);
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const form = await req.formData();
@@ -56,40 +56,42 @@ export async function PUT(
   let attachmentPath = existing.attachment_path;
 
   if (file && file.size > 0) {
-    deleteAttachment(existing.attachment_path);
+    await deleteAttachment(existing.attachment_path);
     const saved = await saveAttachment("expense", year, file);
     attachmentName = saved.name;
     attachmentPath = saved.storedPath;
   } else if (removeAttachment) {
-    deleteAttachment(existing.attachment_path);
+    await deleteAttachment(existing.attachment_path);
     attachmentName = null;
     attachmentPath = null;
   }
 
-  const db = getDb();
+  const supabase = getSupabase();
   const now = new Date().toISOString();
-  db.prepare(
-    `UPDATE expense SET year=?, date=?, category=?, details=?, amount=?, payment_mode=?, bank_account=?, transaction_type=?, transaction_reference=?, remarks=?, attachment_name=?, attachment_path=?, updated_at=?
-     WHERE id = ?`
-  ).run(
-    year,
-    date,
-    category,
-    details,
-    amount,
-    paymentMode,
-    paymentMode === "bank" ? bankAccount : null,
-    paymentMode === "bank" ? transactionType : null,
-    paymentMode === "bank" ? transactionReference : null,
-    remarks,
-    attachmentName,
-    attachmentPath,
-    now,
-    id
-  );
+  const { data: updated, error } = await supabase
+    .from("expense")
+    .update({
+      year,
+      date,
+      category,
+      details,
+      amount,
+      payment_mode: paymentMode,
+      bank_account: paymentMode === "bank" ? bankAccount : null,
+      transaction_type: paymentMode === "bank" ? transactionType : null,
+      transaction_reference: paymentMode === "bank" ? transactionReference : null,
+      remarks,
+      attachment_name: attachmentName,
+      attachment_path: attachmentPath,
+      updated_at: now,
+    })
+    .eq("id", id)
+    .select()
+    .single();
 
-  const updated = db.prepare(`SELECT * FROM expense WHERE id = ?`).get(id);
-  recordAudit("expense", id, "update", { before: existing, after: updated });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await recordAudit("expense", id, "update", { before: existing, after: updated });
 
   return NextResponse.json({ ok: true });
 }
@@ -100,13 +102,14 @@ export async function DELETE(
 ) {
   const { id: idStr } = await params;
   const id = Number(idStr);
-  const existing = getExpenseById(id);
+  const existing = await getExpenseById(id);
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const db = getDb();
+  const supabase = getSupabase();
   const now = new Date().toISOString();
-  db.prepare(`UPDATE expense SET deleted_at = ? WHERE id = ?`).run(now, id);
-  recordAudit("expense", id, "delete", existing);
+  const { error } = await supabase.from("expense").update({ deleted_at: now }).eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await recordAudit("expense", id, "delete", existing);
 
   return NextResponse.json({ ok: true });
 }

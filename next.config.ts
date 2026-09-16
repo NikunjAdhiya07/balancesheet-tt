@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["better-sqlite3", "puppeteer"],
+  serverExternalPackages: ["puppeteer", "puppeteer-core", "@sparticuz/chromium"],
   devIndicators: false,
 };
 

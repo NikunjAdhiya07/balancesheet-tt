@@ -1,4 +1,4 @@
-import { getDb } from "./db";
+import { getSupabase } from "./supabase";
 import { ExpenseRecord, IncomeRecord } from "./types";
 
 export interface IncomeFilters {
@@ -15,90 +15,74 @@ export interface ExpenseFilters extends IncomeFilters {
   category?: string;
 }
 
-export function listIncomeFiltered(filters: IncomeFilters): IncomeRecord[] {
-  const db = getDb();
-  const clauses: string[] = ["year = ?", "deleted_at IS NULL"];
-  const args: unknown[] = [filters.year];
+function orValue(value: string): string {
+  return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+}
 
-  if (filters.from) {
-    clauses.push("date >= ?");
-    args.push(filters.from);
-  }
-  if (filters.to) {
-    clauses.push("date <= ?");
-    args.push(filters.to);
-  }
-  if (filters.paymentMode) {
-    clauses.push("payment_mode = ?");
-    args.push(filters.paymentMode);
-  }
-  if (filters.bankAccount) {
-    clauses.push("bank_account = ?");
-    args.push(filters.bankAccount);
-  }
-  if (filters.transactionType) {
-    clauses.push("transaction_type = ?");
-    args.push(filters.transactionType);
-  }
+function searchFilter(search: string, columns: string[]): string {
+  const like = orValue(`%${search}%`);
+  return columns.map((c) => `${c}.ilike.${like}`).join(",");
+}
+
+export async function listIncomeFiltered(filters: IncomeFilters): Promise<IncomeRecord[]> {
+  const supabase = getSupabase();
+  let query = supabase
+    .from("income")
+    .select("*")
+    .eq("year", filters.year)
+    .is("deleted_at", null)
+    .order("date", { ascending: true })
+    .order("id", { ascending: true });
+
+  if (filters.from) query = query.gte("date", filters.from);
+  if (filters.to) query = query.lte("date", filters.to);
+  if (filters.paymentMode) query = query.eq("payment_mode", filters.paymentMode);
+  if (filters.bankAccount) query = query.eq("bank_account", filters.bankAccount);
+  if (filters.transactionType) query = query.eq("transaction_type", filters.transactionType);
   if (filters.search) {
-    clauses.push("(details LIKE ? OR remarks LIKE ? OR transaction_reference LIKE ?)");
-    const like = `%${filters.search}%`;
-    args.push(like, like, like);
+    query = query.or(searchFilter(filters.search, ["details", "remarks", "transaction_reference"]));
   }
 
-  const sql = `SELECT * FROM income WHERE ${clauses.join(" AND ")} ORDER BY date ASC, id ASC`;
-  return db.prepare(sql).all(...args) as IncomeRecord[];
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as IncomeRecord[];
 }
 
-export function listExpenseFiltered(filters: ExpenseFilters): ExpenseRecord[] {
-  const db = getDb();
-  const clauses: string[] = ["year = ?", "deleted_at IS NULL"];
-  const args: unknown[] = [filters.year];
+export async function listExpenseFiltered(filters: ExpenseFilters): Promise<ExpenseRecord[]> {
+  const supabase = getSupabase();
+  let query = supabase
+    .from("expense")
+    .select("*")
+    .eq("year", filters.year)
+    .is("deleted_at", null)
+    .order("date", { ascending: true })
+    .order("id", { ascending: true });
 
-  if (filters.category) {
-    clauses.push("category = ?");
-    args.push(filters.category);
-  }
-  if (filters.from) {
-    clauses.push("date >= ?");
-    args.push(filters.from);
-  }
-  if (filters.to) {
-    clauses.push("date <= ?");
-    args.push(filters.to);
-  }
-  if (filters.paymentMode) {
-    clauses.push("payment_mode = ?");
-    args.push(filters.paymentMode);
-  }
-  if (filters.bankAccount) {
-    clauses.push("bank_account = ?");
-    args.push(filters.bankAccount);
-  }
-  if (filters.transactionType) {
-    clauses.push("transaction_type = ?");
-    args.push(filters.transactionType);
-  }
+  if (filters.category) query = query.eq("category", filters.category);
+  if (filters.from) query = query.gte("date", filters.from);
+  if (filters.to) query = query.lte("date", filters.to);
+  if (filters.paymentMode) query = query.eq("payment_mode", filters.paymentMode);
+  if (filters.bankAccount) query = query.eq("bank_account", filters.bankAccount);
+  if (filters.transactionType) query = query.eq("transaction_type", filters.transactionType);
   if (filters.search) {
-    clauses.push("(details LIKE ? OR remarks LIKE ? OR transaction_reference LIKE ?)");
-    const like = `%${filters.search}%`;
-    args.push(like, like, like);
+    query = query.or(searchFilter(filters.search, ["details", "remarks", "transaction_reference"]));
   }
 
-  const sql = `SELECT * FROM expense WHERE ${clauses.join(" AND ")} ORDER BY date ASC, id ASC`;
-  return db.prepare(sql).all(...args) as ExpenseRecord[];
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as ExpenseRecord[];
 }
 
-export function getIncomeById(id: number): IncomeRecord | undefined {
-  const db = getDb();
-  return db.prepare(`SELECT * FROM income WHERE id = ?`).get(id) as
-    | IncomeRecord
-    | undefined;
+export async function getIncomeById(id: number): Promise<IncomeRecord | undefined> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.from("income").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return (data ?? undefined) as IncomeRecord | undefined;
 }
 
-export function getExpenseById(id: number): ExpenseRecord | undefined {
-  const db = getDb();
-  return db.prepare(`SELECT * FROM expense WHERE id = ?`).get(id) as
-    | ExpenseRecord
-    | undefined;
+export async function getExpenseById(id: number): Promise<ExpenseRecord | undefined> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.from("expense").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return (data ?? undefined) as ExpenseRecord | undefined;
 }

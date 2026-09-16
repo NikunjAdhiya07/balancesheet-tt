@@ -1,38 +1,37 @@
-import fs from "fs";
-import path from "path";
+import { getSupabase } from "./supabase";
 
-const attachmentsDir = path.join(process.cwd(), "data", "attachments");
+const BUCKET = "attachments";
+const PUBLIC_URL_MARKER = `/storage/v1/object/public/${BUCKET}/`;
 
 export async function saveAttachment(
   type: "income" | "expense",
   year: number,
   file: File
 ): Promise<{ name: string; storedPath: string }> {
-  const dir = path.join(attachmentsDir, String(year), type);
-  fs.mkdirSync(dir, { recursive: true });
+  const supabase = getSupabase();
 
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e6)}-${safeName}`;
-  const fullPath = path.join(dir, uniqueName);
+  const objectPath = `${year}/${type}/${uniqueName}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  fs.writeFileSync(fullPath, buffer);
+  const { error } = await supabase.storage.from(BUCKET).upload(objectPath, buffer, {
+    contentType: file.type || "application/octet-stream",
+    upsert: false,
+  });
+  if (error) throw error;
 
-  const relativePath = path
-    .join("attachments", String(year), type, uniqueName)
-    .replace(/\\/g, "/");
-
-  return { name: file.name, storedPath: relativePath };
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(objectPath);
+  return { name: file.name, storedPath: data.publicUrl };
 }
 
-export function deleteAttachment(storedPath: string | null) {
+export async function deleteAttachment(storedPath: string | null) {
   if (!storedPath) return;
-  const fullPath = path.join(process.cwd(), "data", storedPath);
-  if (fs.existsSync(fullPath)) {
-    try {
-      fs.unlinkSync(fullPath);
-    } catch {
-      // ignore
-    }
-  }
+  const markerIndex = storedPath.indexOf(PUBLIC_URL_MARKER);
+  if (markerIndex === -1) return;
+  const objectPath = decodeURIComponent(
+    storedPath.slice(markerIndex + PUBLIC_URL_MARKER.length)
+  );
+  const supabase = getSupabase();
+  await supabase.storage.from(BUCKET).remove([objectPath]);
 }
