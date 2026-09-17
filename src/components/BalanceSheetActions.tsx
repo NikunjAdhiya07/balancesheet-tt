@@ -9,7 +9,16 @@ export default function BalanceSheetActions({ year }: { year: number }) {
     setLoading(kind);
     try {
       const res = await fetch(`/api/export/${kind}?year=${year}`);
-      if (!res.ok) throw new Error("Export failed");
+      if (!res.ok) {
+        let detail = "Export failed";
+        try {
+          const data = (await res.json()) as { error?: string };
+          if (data.error) detail = data.error;
+        } catch {
+          /* ignore non-JSON error bodies */
+        }
+        throw new Error(detail);
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -19,8 +28,9 @@ export default function BalanceSheetActions({ year }: { year: number }) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-    } catch {
-      alert("Export failed. Please try again.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Export failed. Please try again.";
+      alert(message);
     } finally {
       setLoading(null);
     }

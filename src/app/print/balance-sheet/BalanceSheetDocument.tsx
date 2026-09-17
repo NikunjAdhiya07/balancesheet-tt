@@ -24,7 +24,7 @@ export default function BalanceSheetDocument({
   const club = expense.filter((e) => e.category === "club");
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} data-balance-sheet>
       <div className={styles.outerBorder} />
       <div className={styles.innerBorder} />
       <div className={styles.cornerSwooshTop} />
@@ -89,20 +89,20 @@ export default function BalanceSheetDocument({
         <table className={styles.balanceTable}>
           <tbody>
             <tr>
-              <td className="label">Opening Balance</td>
-              <td className="value">{formatCurrency(summary.openingTotal)}</td>
+              <td className={styles.label}>Opening Balance</td>
+              <td className={styles.value}>{formatCurrency(summary.openingTotal)}</td>
             </tr>
             <tr>
-              <td className="label">+ Total Income</td>
-              <td className="value">{formatCurrency(summary.totalIncome)}</td>
+              <td className={styles.label}>+ Total Income</td>
+              <td className={styles.value}>{formatCurrency(summary.totalIncome)}</td>
             </tr>
             <tr>
-              <td className="label">− Total Expense</td>
-              <td className="value">{formatCurrency(summary.totalExpense)}</td>
+              <td className={styles.label}>− Total Expense</td>
+              <td className={styles.value}>{formatCurrency(summary.totalExpense)}</td>
             </tr>
             <tr className={styles.grand}>
               <td>= Closing Balance</td>
-              <td className="value" style={{ color: "#fff" }}>
+              <td className={styles.value} style={{ color: "#fff" }}>
                 {formatCurrency(summary.closingTotal)}
               </td>
             </tr>
@@ -136,7 +136,7 @@ export default function BalanceSheetDocument({
         <div className={styles.grandTotalBar}>
           <div className={styles.grandTotalInner}>
             <span>Grand Total Closing Balance</span>
-            <span className="amt">{formatCurrency(summary.closingTotal)}</span>
+            <span className={styles.amt}>{formatCurrency(summary.closingTotal)}</span>
           </div>
         </div>
 
@@ -170,15 +170,7 @@ function SummaryBox({ label, value }: { label: string; value: number }) {
 
 function TotalLine({ label, value }: { label: string; value: number }) {
   return (
-    <div
-      style={{
-        textAlign: "right",
-        fontWeight: 800,
-        fontSize: "11.5px",
-        margin: "-4px 0 12px",
-        color: "#1e293b",
-      }}
-    >
+    <div className={styles.totalLine}>
       {label}: {formatCurrency(value)}
     </div>
   );

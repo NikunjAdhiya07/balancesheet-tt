@@ -14,7 +14,8 @@ export async function GET(req: NextRequest) {
 
   return new NextResponse(buffer as unknown as BodyInit, {
     headers: {
-      "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       "Content-Disposition": `attachment; filename="Tiranga-Balance-Sheet-${year}.docx"`,
     },
   });
