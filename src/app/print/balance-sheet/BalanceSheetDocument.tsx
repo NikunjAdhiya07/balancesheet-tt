@@ -273,11 +273,15 @@ function ExpenseTable({
 }
 
 function bankRefLabel(r: IncomeRecord | ExpenseRecord): string {
-  if (r.payment_mode === "cash") return "Cash";
   const parts: string[] = [];
-  if (r.bank_account) parts.push(BANK_ACCOUNT_LABELS[r.bank_account]);
-  if (r.transaction_type) parts.push(TRANSACTION_TYPE_LABELS[r.transaction_type]);
-  if (r.transaction_reference) parts.push(r.transaction_reference);
+  if (r.payment_mode === "cash") {
+    parts.push("Cash");
+  } else {
+    if (r.bank_account) parts.push(BANK_ACCOUNT_LABELS[r.bank_account]);
+    if (r.transaction_type) parts.push(TRANSACTION_TYPE_LABELS[r.transaction_type]);
+    if (r.transaction_reference) parts.push(r.transaction_reference);
+  }
+  if (r.remarks) parts.push(r.remarks);
   return parts.join(" · ") || "—";
 }
 
