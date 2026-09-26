@@ -112,7 +112,10 @@ export default function IncomeTable({
                 <td className="px-3 py-2 text-slate-600">
                   {r.transaction_reference || "—"}
                 </td>
-                <td className="px-3 py-2 max-w-[160px] truncate text-slate-500">
+                <td
+                  className="px-3 py-2 max-w-[160px] truncate text-slate-500"
+                  title={r.remarks || undefined}
+                >
                   {r.remarks || "—"}
                 </td>
                 <td className="px-3 py-2">
