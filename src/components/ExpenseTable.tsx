@@ -5,6 +5,7 @@ import { useState } from "react";
 import ExpenseForm from "./ExpenseForm";
 import ConfirmDialog from "./ConfirmDialog";
 import Modal from "./Modal";
+import TruncatedText from "./TruncatedText";
 import {
   BANK_ACCOUNT_LABELS,
   EXPENSE_CATEGORY_LABELS,
@@ -131,8 +132,8 @@ export default function ExpenseTable({
                     {EXPENSE_CATEGORY_LABELS[r.category]}
                   </span>
                 </td>
-                <td className="px-3 py-2 max-w-[200px] truncate text-slate-700">
-                  {r.details}
+                <td className="px-3 py-2 max-w-[200px] text-slate-700">
+                  <TruncatedText text={r.details} className="max-w-[200px] text-slate-700" />
                 </td>
                 <td className="px-3 py-2 text-right font-semibold text-slate-800">
                   {formatCurrency(r.amount)}
@@ -147,11 +148,8 @@ export default function ExpenseTable({
                 <td className="px-3 py-2 text-slate-600">
                   {r.transaction_reference || "—"}
                 </td>
-                <td
-                  className="px-3 py-2 max-w-[140px] truncate text-slate-500"
-                  title={r.remarks || undefined}
-                >
-                  {r.remarks || "—"}
+                <td className="px-3 py-2 max-w-[140px] text-slate-500">
+                  <TruncatedText text={r.remarks} className="max-w-[140px] text-slate-500" />
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex gap-2">
