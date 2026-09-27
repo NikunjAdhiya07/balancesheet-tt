@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { listIncomeFiltered, listExpenseFiltered } from "@/lib/queries";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { BANK_ACCOUNT_LABELS, EXPENSE_CATEGORY_LABELS } from "@/lib/types";
+import { listAccounts } from "@/lib/accounts";
+import { EXPENSE_CATEGORY_LABELS, bankAccountLabel } from "@/lib/types";
 
 type Row = {
   id: number;
@@ -25,6 +26,8 @@ export default async function TransactionsPage({
   const from = sp.from;
   const to = sp.to;
   const search = sp.search;
+
+  const accounts = await listAccounts();
 
   const income =
     type === "expense"
@@ -185,9 +188,7 @@ export default async function TransactionsPage({
                 </td>
                 <td className="px-3 py-2 capitalize text-slate-600">{r.paymentMode}</td>
                 <td className="px-3 py-2 text-slate-600">
-                  {r.bankAccount
-                    ? BANK_ACCOUNT_LABELS[r.bankAccount as "main" | "secretary"]
-                    : "—"}
+                  {bankAccountLabel(r.bankAccount, accounts)}
                 </td>
                 <td
                   className={`px-3 py-2 text-right font-semibold ${

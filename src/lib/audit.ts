@@ -1,7 +1,7 @@
 import { getSupabase } from "./supabase";
 
 export async function recordAudit(
-  entityType: "income" | "expense",
+  entityType: "income" | "expense" | "account",
   entityId: number,
   action: "create" | "update" | "delete",
   snapshot: unknown

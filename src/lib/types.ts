@@ -16,7 +16,7 @@ export interface IncomeRecord {
   amount: number;
   details: string;
   payment_mode: PaymentMode;
-  bank_account: BankAccount | null;
+  bank_account: string | null;
   transaction_type: TransactionType | null;
   transaction_reference: string | null;
   remarks: string | null;
@@ -35,7 +35,7 @@ export interface ExpenseRecord {
   details: string;
   amount: number;
   payment_mode: PaymentMode;
-  bank_account: BankAccount | null;
+  bank_account: string | null;
   transaction_type: TransactionType | null;
   transaction_reference: string | null;
   remarks: string | null;
@@ -44,6 +44,28 @@ export interface ExpenseRecord {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+}
+
+export interface AccountRecord {
+  id: number;
+  code: string;
+  name: string;
+  bank_name: string | null;
+  account_number: string | null;
+  ifsc: string | null;
+  holder_name: string | null;
+  notes: string | null;
+  is_active: boolean;
+  is_system: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AccountActivity {
+  income: number;
+  expense: number;
+  incomeCount: number;
+  expenseCount: number;
 }
 
 export interface YearRecord {
@@ -65,6 +87,7 @@ export interface YearSummary {
   cashIncome: number;
   mainIncome: number;
   secretaryIncome: number;
+  otherIncome: number;
   totalIncome: number;
 
   tournamentExpense: number;
@@ -72,11 +95,13 @@ export interface YearSummary {
   cashExpense: number;
   mainExpense: number;
   secretaryExpense: number;
+  otherExpense: number;
   totalExpense: number;
 
   closingCash: number;
   closingMain: number;
   closingSecretary: number;
+  closingOther: number;
   closingTotal: number;
 }
 
@@ -84,6 +109,17 @@ export const BANK_ACCOUNT_LABELS: Record<BankAccount, string> = {
   main: "Main Club Account",
   secretary: "Montu Kaka (Secretary) Account",
 };
+
+export function bankAccountLabel(
+  code: string | null | undefined,
+  accounts?: { code: string; name: string }[]
+): string {
+  if (!code) return "—";
+  const fromList = accounts?.find((account) => account.code === code)?.name;
+  if (fromList) return fromList;
+  if (code === "main" || code === "secretary") return BANK_ACCOUNT_LABELS[code];
+  return code;
+}
 
 export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
   cheque: "Cheque",

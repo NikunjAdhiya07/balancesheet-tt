@@ -15,11 +15,11 @@ import {
 } from "docx";
 import { formatCurrency, formatDate } from "./format";
 import {
-  BANK_ACCOUNT_LABELS,
   ExpenseRecord,
   IncomeRecord,
   TRANSACTION_TYPE_LABELS,
   YearSummary,
+  bankAccountLabel,
 } from "./types";
 
 const NAVY = "0F2A52";
@@ -63,12 +63,15 @@ function bodyCell(text: string, widthPct: number, align: "left" | "right" = "lef
   });
 }
 
-function bankRefLabel(r: IncomeRecord | ExpenseRecord): string {
+function bankRefLabel(
+  r: IncomeRecord | ExpenseRecord,
+  accounts?: { code: string; name: string }[]
+): string {
   const parts: string[] = [];
   if (r.payment_mode === "cash") {
     parts.push("Cash");
   } else {
-    if (r.bank_account) parts.push(BANK_ACCOUNT_LABELS[r.bank_account]);
+    if (r.bank_account) parts.push(bankAccountLabel(r.bank_account, accounts));
     if (r.transaction_type) parts.push(TRANSACTION_TYPE_LABELS[r.transaction_type]);
     if (r.transaction_reference) parts.push(r.transaction_reference);
   }
@@ -79,7 +82,8 @@ function bankRefLabel(r: IncomeRecord | ExpenseRecord): string {
 function entriesTable(
   rows: (IncomeRecord | ExpenseRecord)[],
   headerColor: string,
-  totalLabel: string
+  totalLabel: string,
+  accounts?: { code: string; name: string }[]
 ) {
   const total = rows.reduce((a, r) => a + r.amount, 0);
   const header = new TableRow({
@@ -102,7 +106,7 @@ function entriesTable(
           bodyCell(formatDate(r.date), 11, "left", i % 2 === 1),
           bodyCell(r.details, 33, "left", i % 2 === 1),
           bodyCell(r.payment_mode, 10, "left", i % 2 === 1),
-          bodyCell(bankRefLabel(r), 22, "left", i % 2 === 1),
+          bodyCell(bankRefLabel(r, accounts), 22, "left", i % 2 === 1),
           bodyCell(formatCurrency(r.amount), 18, "right", i % 2 === 1),
         ],
       })
@@ -208,10 +212,14 @@ export async function buildBalanceSheetDocx(
   year: number,
   summary: YearSummary,
   income: IncomeRecord[],
-  expense: ExpenseRecord[]
+  expense: ExpenseRecord[],
+  accounts: { code: string; name: string }[] = []
 ): Promise<Buffer> {
   const tournament = expense.filter((e) => e.category === "tournament");
   const club = expense.filter((e) => e.category === "club");
+  const mainName = bankAccountLabel("main", accounts);
+  const secretaryName = bankAccountLabel("secretary", accounts);
+  const hasOther = summary.otherIncome !== 0 || summary.otherExpense !== 0 || summary.closingOther !== 0;
 
   const doc = new Document({
     sections: [
@@ -251,18 +259,21 @@ export async function buildBalanceSheetDocx(
           sectionHeading("INCOME", NAVY),
           summaryLineTable([
             ["Cash Income", formatCurrency(summary.cashIncome)],
-            ["Main Club Account Income", formatCurrency(summary.mainIncome)],
-            ["Montu Kaka (Secretary) Account Income", formatCurrency(summary.secretaryIncome)],
+            [`${mainName} Income`, formatCurrency(summary.mainIncome)],
+            [`${secretaryName} Income`, formatCurrency(summary.secretaryIncome)],
+            ...(hasOther
+              ? [["Other Bank Account Income", formatCurrency(summary.otherIncome)] as [string, string]]
+              : []),
             ["Total Income", formatCurrency(summary.totalIncome)],
           ]),
           new Paragraph({ text: "" }),
-          entriesTable(income, NAVY, "Total Income"),
+          entriesTable(income, NAVY, "Total Income", accounts),
 
           sectionHeading("TOURNAMENT EXPENSE", ORANGE),
-          entriesTable(tournament, ORANGE, "Total Tournament Expense"),
+          entriesTable(tournament, ORANGE, "Total Tournament Expense", accounts),
 
           sectionHeading("CLUB EXPENSE", BLUE),
-          entriesTable(club, BLUE, "Total Club Expense"),
+          entriesTable(club, BLUE, "Total Club Expense", accounts),
 
           new Paragraph({ text: "" }),
           summaryLineTable([
@@ -284,8 +295,11 @@ export async function buildBalanceSheetDocx(
           new Paragraph({ text: "" }),
           summaryLineTable([
             ["Cash Balance (Closing)", formatCurrency(summary.closingCash)],
-            ["Main Club Account (Closing)", formatCurrency(summary.closingMain)],
-            ["Montu Kaka Account (Closing)", formatCurrency(summary.closingSecretary)],
+            [`${mainName} (Closing)`, formatCurrency(summary.closingMain)],
+            [`${secretaryName} (Closing)`, formatCurrency(summary.closingSecretary)],
+            ...(hasOther
+              ? [["Other Bank Accounts (Closing)", formatCurrency(summary.closingOther)] as [string, string]]
+              : []),
             ["Grand Total Closing Balance", formatCurrency(summary.closingTotal)],
           ], true),
 

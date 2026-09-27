@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/expense", label: "Expense" },
   { href: "/transactions", label: "Transactions" },
   { href: "/balance-sheet", label: "Balance Sheet" },
+  { href: "/accounts", label: "Accounts" },
 ];
 
 export default function Nav() {

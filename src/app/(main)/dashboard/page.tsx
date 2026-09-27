@@ -1,8 +1,10 @@
 import Link from "next/link";
 import StatCard from "@/components/StatCard";
 import OpeningBalanceEditor from "@/components/OpeningBalanceEditor";
+import { listAccounts } from "@/lib/accounts";
 import { computeYearSummary } from "@/lib/calculations";
 import { formatCurrency } from "@/lib/format";
+import { bankAccountLabel } from "@/lib/types";
 
 export default async function DashboardPage({
   searchParams,
@@ -11,7 +13,10 @@ export default async function DashboardPage({
 }) {
   const sp = await searchParams;
   const year = Number(sp.year) || new Date().getFullYear();
-  const s = await computeYearSummary(year);
+  const [s, accounts] = await Promise.all([computeYearSummary(year), listAccounts()]);
+  const mainName = bankAccountLabel("main", accounts);
+  const secretaryName = bankAccountLabel("secretary", accounts);
+  const hasOther = s.otherIncome !== 0 || s.otherExpense !== 0 || s.closingOther !== 0;
 
   return (
     <div>
@@ -54,8 +59,9 @@ export default async function DashboardPage({
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <h3 className="mb-3 text-sm font-bold text-slate-700">Income Breakdown</h3>
           <BreakdownRow label="Cash Income" value={s.cashIncome} />
-          <BreakdownRow label="Main Club Account Income" value={s.mainIncome} />
-          <BreakdownRow label="Montu Kaka Account Income" value={s.secretaryIncome} />
+          <BreakdownRow label={`${mainName} Income`} value={s.mainIncome} />
+          <BreakdownRow label={`${secretaryName} Income`} value={s.secretaryIncome} />
+          {hasOther && <BreakdownRow label="Other Bank Account Income" value={s.otherIncome} />}
           <BreakdownRow label="Total Income" value={s.totalIncome} bold />
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -63,8 +69,9 @@ export default async function DashboardPage({
           <BreakdownRow label="Tournament Expense" value={s.tournamentExpense} />
           <BreakdownRow label="Club Expense" value={s.clubExpense} />
           <BreakdownRow label="Cash Expense" value={s.cashExpense} />
-          <BreakdownRow label="Main Club Account Expense" value={s.mainExpense} />
-          <BreakdownRow label="Montu Kaka Account Expense" value={s.secretaryExpense} />
+          <BreakdownRow label={`${mainName} Expense`} value={s.mainExpense} />
+          <BreakdownRow label={`${secretaryName} Expense`} value={s.secretaryExpense} />
+          {hasOther && <BreakdownRow label="Other Bank Account Expense" value={s.otherExpense} />}
           <BreakdownRow label="Total Expense" value={s.totalExpense} bold />
         </div>
       </div>
@@ -89,19 +96,28 @@ export default async function DashboardPage({
             closing={s.closingCash}
           />
           <BalanceCard
-            title="Main Club Account"
+            title={mainName}
             opening={s.openingMain}
             plus={s.mainIncome}
             minus={s.mainExpense}
             closing={s.closingMain}
           />
           <BalanceCard
-            title="Montu Kaka (Secretary) Account"
+            title={secretaryName}
             opening={s.openingSecretary}
             plus={s.secretaryIncome}
             minus={s.secretaryExpense}
             closing={s.closingSecretary}
           />
+          {hasOther && (
+            <BalanceCard
+              title="Other Bank Accounts"
+              opening={0}
+              plus={s.otherIncome}
+              minus={s.otherExpense}
+              closing={s.closingOther}
+            />
+          )}
         </div>
         <div className="mt-4 rounded-lg bg-slate-800 px-4 py-3 text-white">
           <div className="flex items-center justify-between">

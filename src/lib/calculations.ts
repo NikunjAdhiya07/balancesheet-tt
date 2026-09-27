@@ -75,6 +75,15 @@ export async function computeYearSummary(year: number): Promise<YearSummary> {
   const secretaryIncome = sum(
     income.filter((r) => r.payment_mode === "bank" && r.bank_account === "secretary")
   );
+  const otherIncome = sum(
+    income.filter(
+      (r) =>
+        r.payment_mode === "bank" &&
+        !!r.bank_account &&
+        r.bank_account !== "main" &&
+        r.bank_account !== "secretary"
+    )
+  );
   const totalIncome = sum(income);
 
   const tournamentExpense = sum(expense.filter((r) => r.category === "tournament"));
@@ -86,6 +95,15 @@ export async function computeYearSummary(year: number): Promise<YearSummary> {
   const secretaryExpense = sum(
     expense.filter((r) => r.payment_mode === "bank" && r.bank_account === "secretary")
   );
+  const otherExpense = sum(
+    expense.filter(
+      (r) =>
+        r.payment_mode === "bank" &&
+        !!r.bank_account &&
+        r.bank_account !== "main" &&
+        r.bank_account !== "secretary"
+    )
+  );
   const totalExpense = sum(expense);
 
   const openingCash = yearRow.opening_cash;
@@ -96,7 +114,8 @@ export async function computeYearSummary(year: number): Promise<YearSummary> {
   const closingCash = openingCash + cashIncome - cashExpense;
   const closingMain = openingMain + mainIncome - mainExpense;
   const closingSecretary = openingSecretary + secretaryIncome - secretaryExpense;
-  const closingTotal = closingCash + closingMain + closingSecretary;
+  const closingOther = otherIncome - otherExpense;
+  const closingTotal = closingCash + closingMain + closingSecretary + closingOther;
 
   return {
     year,
@@ -107,16 +126,19 @@ export async function computeYearSummary(year: number): Promise<YearSummary> {
     cashIncome,
     mainIncome,
     secretaryIncome,
+    otherIncome,
     totalIncome,
     tournamentExpense,
     clubExpense,
     cashExpense,
     mainExpense,
     secretaryExpense,
+    otherExpense,
     totalExpense,
     closingCash,
     closingMain,
     closingSecretary,
+    closingOther,
     closingTotal,
   };
 }

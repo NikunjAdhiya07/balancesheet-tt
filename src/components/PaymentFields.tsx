@@ -9,6 +9,12 @@ import {
   TransactionType,
 } from "@/lib/types";
 
+export interface PaymentAccountOption {
+  code: string;
+  name: string;
+  is_active: boolean;
+}
+
 const TRANSACTION_TYPES: TransactionType[] = [
   "cheque",
   "upi",
@@ -23,6 +29,7 @@ export default function PaymentFields({
   setPaymentMode,
   bankAccount,
   setBankAccount,
+  accounts,
   transactionType,
   setTransactionType,
   transactionReference,
@@ -30,13 +37,26 @@ export default function PaymentFields({
 }: {
   paymentMode: PaymentMode;
   setPaymentMode: (v: PaymentMode) => void;
-  bankAccount: BankAccount | "";
-  setBankAccount: (v: BankAccount | "") => void;
+  bankAccount: string;
+  setBankAccount: (v: string) => void;
+  accounts?: PaymentAccountOption[];
   transactionType: TransactionType | "";
   setTransactionType: (v: TransactionType | "") => void;
   transactionReference: string;
   setTransactionReference: (v: string) => void;
 }) {
+  const source: PaymentAccountOption[] =
+    accounts && accounts.length > 0
+      ? accounts
+      : (Object.keys(BANK_ACCOUNT_LABELS) as BankAccount[]).map((code) => ({
+          code,
+          name: BANK_ACCOUNT_LABELS[code],
+          is_active: true,
+        }));
+  const accountOptions = source.filter(
+    (account) => account.is_active || account.code === bankAccount
+  );
+
   return (
     <>
       <div>
@@ -71,14 +91,15 @@ export default function PaymentFields({
             <select
               name="bank_account"
               value={bankAccount}
-              onChange={(e) => setBankAccount(e.target.value as BankAccount)}
+              onChange={(e) => setBankAccount(e.target.value)}
               required
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none"
             >
               <option value="">Select account</option>
-              {(Object.keys(BANK_ACCOUNT_LABELS) as BankAccount[]).map((k) => (
-                <option key={k} value={k}>
-                  {BANK_ACCOUNT_LABELS[k]}
+              {accountOptions.map((account) => (
+                <option key={account.code} value={account.code}>
+                  {account.name}
+                  {!account.is_active ? " (inactive)" : ""}
                 </option>
               ))}
             </select>

@@ -7,18 +7,21 @@ import ConfirmDialog from "./ConfirmDialog";
 import Modal from "./Modal";
 import TruncatedText from "./TruncatedText";
 import {
-  BANK_ACCOUNT_LABELS,
   IncomeRecord,
   TRANSACTION_TYPE_LABELS,
+  bankAccountLabel,
 } from "@/lib/types";
+import { PaymentAccountOption } from "./PaymentFields";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 export default function IncomeTable({
   rows,
   year,
+  accounts = [],
 }: {
   rows: IncomeRecord[];
   year: number;
+  accounts?: PaymentAccountOption[];
 }) {
   const router = useRouter();
   const [showAdd, setShowAdd] = useState(false);
@@ -105,7 +108,7 @@ export default function IncomeTable({
                 </td>
                 <td className="px-3 py-2 capitalize text-slate-600">{r.payment_mode}</td>
                 <td className="px-3 py-2 text-slate-600">
-                  {r.bank_account ? BANK_ACCOUNT_LABELS[r.bank_account] : "—"}
+                  {bankAccountLabel(r.bank_account, accounts)}
                 </td>
                 <td className="px-3 py-2 text-slate-600">
                   {r.transaction_type ? TRANSACTION_TYPE_LABELS[r.transaction_type] : "—"}
@@ -144,9 +147,16 @@ export default function IncomeTable({
         </table>
       </div>
 
-      {showAdd && <IncomeForm year={year} onClose={() => setShowAdd(false)} />}
+      {showAdd && (
+        <IncomeForm year={year} accounts={accounts} onClose={() => setShowAdd(false)} />
+      )}
       {editing && (
-        <IncomeForm year={year} existing={editing} onClose={() => setEditing(null)} />
+        <IncomeForm
+          year={year}
+          existing={editing}
+          accounts={accounts}
+          onClose={() => setEditing(null)}
+        />
       )}
       {viewing && (
         <Modal title="Income Details" onClose={() => setViewing(null)}>
@@ -156,7 +166,7 @@ export default function IncomeTable({
             <Row label="Details" value={viewing.details} />
             <Row label="Payment Mode" value={viewing.payment_mode} />
             {viewing.bank_account && (
-              <Row label="Bank Account" value={BANK_ACCOUNT_LABELS[viewing.bank_account]} />
+              <Row label="Bank Account" value={bankAccountLabel(viewing.bank_account, accounts)} />
             )}
             {viewing.transaction_type && (
               <Row

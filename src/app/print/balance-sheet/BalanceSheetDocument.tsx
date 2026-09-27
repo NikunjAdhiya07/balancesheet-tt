@@ -1,10 +1,10 @@
 import AshokaChakra from "@/components/AshokaChakra";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
-  BANK_ACCOUNT_LABELS,
   ExpenseRecord,
   IncomeRecord,
   TRANSACTION_TYPE_LABELS,
+  bankAccountLabel,
 } from "@/lib/types";
 import { YearSummary } from "@/lib/types";
 import styles from "./balance-sheet.module.css";
@@ -14,14 +14,19 @@ export default function BalanceSheetDocument({
   summary,
   income,
   expense,
+  accounts = [],
 }: {
   year: number;
   summary: YearSummary;
   income: IncomeRecord[];
   expense: ExpenseRecord[];
+  accounts?: { code: string; name: string }[];
 }) {
   const tournament = expense.filter((e) => e.category === "tournament");
   const club = expense.filter((e) => e.category === "club");
+  const mainName = bankAccountLabel("main", accounts);
+  const secretaryName = bankAccountLabel("secretary", accounts);
+  const hasOther = summary.otherIncome !== 0 || summary.otherExpense !== 0 || summary.closingOther !== 0;
 
   return (
     <div className={styles.page} data-balance-sheet>
@@ -54,24 +59,25 @@ export default function BalanceSheetDocument({
 
         <div className={styles.summaryGrid}>
           <SummaryBox label="Cash Income" value={summary.cashIncome} />
-          <SummaryBox label="Main Club A/c Income" value={summary.mainIncome} />
-          <SummaryBox label="Montu Kaka A/c Income" value={summary.secretaryIncome} />
+          <SummaryBox label={`${mainName} Income`} value={summary.mainIncome} />
+          <SummaryBox label={`${secretaryName} Income`} value={summary.secretaryIncome} />
+          {hasOther && <SummaryBox label="Other Bank Income" value={summary.otherIncome} />}
           <SummaryBox label="Total Income" value={summary.totalIncome} />
         </div>
 
-        <IncomeTable rows={income} />
+        <IncomeTable rows={income} accounts={accounts} />
 
         {/* EXPENSE */}
         <div className={styles.sectionBadge + " " + styles.badgeExpenseT}>
           Tournament Expense
         </div>
-        <ExpenseTable rows={tournament} variant="expTournament" />
+        <ExpenseTable rows={tournament} variant="expTournament" accounts={accounts} />
         <TotalLine label="Total Tournament Expense" value={summary.tournamentExpense} />
 
         <div className={styles.sectionBadge + " " + styles.badgeExpenseC}>
           Club Expense
         </div>
-        <ExpenseTable rows={club} variant="expClub" />
+        <ExpenseTable rows={club} variant="expClub" accounts={accounts} />
         <TotalLine label="Total Club Expense" value={summary.clubExpense} />
 
         <div className={styles.summaryGrid}>
@@ -118,19 +124,28 @@ export default function BalanceSheetDocument({
             closing={summary.closingCash}
           />
           <AccountCard
-            title="Main Club Account"
+            title={mainName}
             opening={summary.openingMain}
             income={summary.mainIncome}
             expense={summary.mainExpense}
             closing={summary.closingMain}
           />
           <AccountCard
-            title="Montu Kaka (Secretary) A/c"
+            title={secretaryName}
             opening={summary.openingSecretary}
             income={summary.secretaryIncome}
             expense={summary.secretaryExpense}
             closing={summary.closingSecretary}
           />
+          {hasOther && (
+            <AccountCard
+              title="Other Bank Accounts"
+              opening={0}
+              income={summary.otherIncome}
+              expense={summary.otherExpense}
+              closing={summary.closingOther}
+            />
+          )}
         </div>
 
         <div className={styles.grandTotalBar}>
@@ -176,7 +191,13 @@ function TotalLine({ label, value }: { label: string; value: number }) {
   );
 }
 
-function IncomeTable({ rows }: { rows: IncomeRecord[] }) {
+function IncomeTable({
+  rows,
+  accounts,
+}: {
+  rows: IncomeRecord[];
+  accounts?: { code: string; name: string }[];
+}) {
   const total = rows.reduce((a, r) => a + r.amount, 0);
   return (
     <table className={styles.dataTable}>
@@ -206,7 +227,7 @@ function IncomeTable({ rows }: { rows: IncomeRecord[] }) {
             <td>{formatDate(r.date)}</td>
             <td>{r.details}</td>
             <td style={{ textTransform: "capitalize" }}>{r.payment_mode}</td>
-            <td>{bankRefLabel(r)}</td>
+            <td>{bankRefLabel(r, accounts)}</td>
             <td className={styles.amountCell}>{formatCurrency(r.amount)}</td>
           </tr>
         ))}
@@ -224,9 +245,11 @@ function IncomeTable({ rows }: { rows: IncomeRecord[] }) {
 function ExpenseTable({
   rows,
   variant,
+  accounts,
 }: {
   rows: ExpenseRecord[];
   variant: "expTournament" | "expClub";
+  accounts?: { code: string; name: string }[];
 }) {
   const total = rows.reduce((a, r) => a + r.amount, 0);
   return (
@@ -257,7 +280,7 @@ function ExpenseTable({
             <td>{formatDate(r.date)}</td>
             <td>{r.details}</td>
             <td style={{ textTransform: "capitalize" }}>{r.payment_mode}</td>
-            <td>{bankRefLabel(r)}</td>
+            <td>{bankRefLabel(r, accounts)}</td>
             <td className={styles.amountCell}>{formatCurrency(r.amount)}</td>
           </tr>
         ))}
@@ -272,12 +295,15 @@ function ExpenseTable({
   );
 }
 
-function bankRefLabel(r: IncomeRecord | ExpenseRecord): string {
+function bankRefLabel(
+  r: IncomeRecord | ExpenseRecord,
+  accounts?: { code: string; name: string }[]
+): string {
   const parts: string[] = [];
   if (r.payment_mode === "cash") {
     parts.push("Cash");
   } else {
-    if (r.bank_account) parts.push(BANK_ACCOUNT_LABELS[r.bank_account]);
+    if (r.bank_account) parts.push(bankAccountLabel(r.bank_account, accounts));
     if (r.transaction_type) parts.push(TRANSACTION_TYPE_LABELS[r.transaction_type]);
     if (r.transaction_reference) parts.push(r.transaction_reference);
   }

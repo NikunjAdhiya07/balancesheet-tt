@@ -3,6 +3,7 @@ import { getSupabase } from "@/lib/supabase";
 import { recordAudit } from "@/lib/audit";
 import { saveAttachment } from "@/lib/attachments";
 import { listExpenseFiltered } from "@/lib/queries";
+import { resolveBankAccount } from "@/lib/accounts";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -49,8 +50,9 @@ export async function POST(req: NextRequest) {
   ) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
-  if (paymentMode === "bank" && !bankAccount) {
-    return NextResponse.json({ error: "Bank account is required" }, { status: 400 });
+  const resolvedAccount = await resolveBankAccount(paymentMode, bankAccount);
+  if (!resolvedAccount.ok) {
+    return NextResponse.json({ error: resolvedAccount.error }, { status: 400 });
   }
 
   let attachmentName: string | null = null;
@@ -72,7 +74,7 @@ export async function POST(req: NextRequest) {
       details,
       amount,
       payment_mode: paymentMode,
-      bank_account: paymentMode === "bank" ? bankAccount : null,
+      bank_account: resolvedAccount.code,
       transaction_type: paymentMode === "bank" ? transactionType : null,
       transaction_reference: paymentMode === "bank" ? transactionReference : null,
       remarks,

@@ -7,15 +7,22 @@ import {
   TransactionType,
 } from "@/lib/types";
 
+export interface FilterAccountOption {
+  code: string;
+  name: string;
+}
+
 export default function FilterBar({
   basePath,
   year,
   showCategory,
+  accounts,
   values,
 }: {
   basePath: string;
   year: number;
   showCategory?: boolean;
+  accounts?: FilterAccountOption[];
   values: {
     category?: string;
     from?: string;
@@ -26,6 +33,14 @@ export default function FilterBar({
     search?: string;
   };
 }) {
+  const accountOptions =
+    accounts && accounts.length > 0
+      ? accounts
+      : (Object.keys(BANK_ACCOUNT_LABELS) as BankAccount[]).map((code) => ({
+          code,
+          name: BANK_ACCOUNT_LABELS[code],
+        }));
+
   return (
     <form
       method="get"
@@ -63,9 +78,9 @@ export default function FilterBar({
       <Field label="Bank Account">
         <select name="bankAccount" defaultValue={values.bankAccount || ""} className={selectCls}>
           <option value="">All</option>
-          {(Object.keys(BANK_ACCOUNT_LABELS) as BankAccount[]).map((k) => (
-            <option key={k} value={k}>
-              {BANK_ACCOUNT_LABELS[k]}
+          {accountOptions.map((account) => (
+            <option key={account.code} value={account.code}>
+              {account.name}
             </option>
           ))}
         </select>

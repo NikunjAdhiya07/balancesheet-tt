@@ -59,3 +59,24 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 CREATE INDEX IF NOT EXISTS idx_income_year ON income(year);
 CREATE INDEX IF NOT EXISTS idx_expense_year ON expense(year);
+
+CREATE TABLE IF NOT EXISTS accounts (
+  id SERIAL PRIMARY KEY,
+  code TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  bank_name TEXT,
+  account_number TEXT,
+  ifsc TEXT,
+  holder_name TEXT,
+  notes TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  is_system BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+INSERT INTO accounts (code, name, holder_name, is_active, is_system, created_at, updated_at)
+VALUES
+  ('main', 'Main Club Account', NULL, TRUE, TRUE, NOW()::text, NOW()::text),
+  ('secretary', 'Montu Kaka (Secretary) Account', 'Montu Kaka', TRUE, TRUE, NOW()::text, NOW()::text)
+ON CONFLICT (code) DO NOTHING;

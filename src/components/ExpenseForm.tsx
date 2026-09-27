@@ -3,9 +3,8 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import Modal from "./Modal";
-import PaymentFields from "./PaymentFields";
+import PaymentFields, { PaymentAccountOption } from "./PaymentFields";
 import {
-  BankAccount,
   CLUB_EXPENSE_SUGGESTIONS,
   EXPENSE_CATEGORY_LABELS,
   ExpenseCategory,
@@ -19,10 +18,12 @@ import { todayIso } from "@/lib/format";
 export default function ExpenseForm({
   year,
   existing,
+  accounts,
   onClose,
 }: {
   year: number;
   existing?: ExpenseRecord;
+  accounts?: PaymentAccountOption[];
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -35,9 +36,7 @@ export default function ExpenseForm({
   const [paymentMode, setPaymentMode] = useState<PaymentMode>(
     existing?.payment_mode || "cash"
   );
-  const [bankAccount, setBankAccount] = useState<BankAccount | "">(
-    existing?.bank_account || ""
-  );
+  const [bankAccount, setBankAccount] = useState(existing?.bank_account || "");
   const [transactionType, setTransactionType] = useState<TransactionType | "">(
     existing?.transaction_type || ""
   );
@@ -174,6 +173,7 @@ export default function ExpenseForm({
           setPaymentMode={setPaymentMode}
           bankAccount={bankAccount}
           setBankAccount={setBankAccount}
+          accounts={accounts}
           transactionType={transactionType}
           setTransactionType={setTransactionType}
           transactionReference={transactionReference}
