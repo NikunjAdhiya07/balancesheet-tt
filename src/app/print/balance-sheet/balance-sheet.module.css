@@ -101,20 +101,13 @@
   margin-bottom: 6px;
 }
 
-.logoCircle {
+.logoMark {
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  background: conic-gradient(from 90deg, #ff9933 0 33%, #ffffff 33% 66%, #128a3e 66% 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 11px;
-  color: #1e293b;
-  border: 1.5px solid #c9a227;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .headerCenter {

@@ -60,9 +60,11 @@ export default function Nav() {
     <header className="sticky top-0 z-40 border-b border-orange-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-b from-orange-500 via-white to-green-600 text-xs font-bold text-slate-800 shadow ring-1 ring-slate-300">
-            TT
-          </div>
+          <img
+            src="/logo.png"
+            alt=""
+            className="h-10 w-10 rounded-xl object-cover shadow-sm ring-1 ring-slate-200"
+          />
           <div className="leading-tight">
             <div className="text-sm font-bold text-slate-800">
               Table Tennis Players of Surendranagar

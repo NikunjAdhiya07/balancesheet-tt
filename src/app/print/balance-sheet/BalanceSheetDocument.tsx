@@ -40,7 +40,7 @@ export default function BalanceSheetDocument({
 
       <div className={styles.content}>
         <div className={styles.headerRow}>
-          <div className={styles.logoCircle}>TT</div>
+          <img src="/logo.png" alt="" className={styles.logoMark} />
           <div className={styles.headerCenter}>
             <span className={styles.clubBadge}>
               Table Tennis Players of Surendranagar
@@ -48,7 +48,7 @@ export default function BalanceSheetDocument({
             <div className={styles.title}>TIRANGA BALANCE SHEET</div>
             <div className={styles.subtitle}>Annual Income &amp; Expense Statement</div>
           </div>
-          <div className={styles.logoCircle}>TT</div>
+          <img src="/logo.png" alt="" className={styles.logoMark} />
         </div>
         <div className={styles.ribbonWrap}>
           <span className={styles.ribbon}>Financial Year : {year}</span>
