@@ -15,6 +15,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Tiranga Club Accounts",
   description: "Income & Expense Management for Table Tennis Players of Surendranagar",
+  applicationName: "Club Accounts",
+  appleWebApp: {
+    capable: true,
+    title: "Club Accounts",
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
